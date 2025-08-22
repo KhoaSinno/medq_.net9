@@ -1,4 +1,4 @@
-# MEDQ – “xếp hàng thông minh & thuốc còn hàng gần bạn”
+# MEDQ – “Smart queue & medicine in stock near you will be!!”
 
 **Nỗi đau xã hội:** Người bệnh mất thời gian chờ khám; dễ “hết thuốc/đội giá” khi đi mua. MEDQ giúp:
 
@@ -18,7 +18,7 @@
 
 ---
 
-# Lộ trình 2 tháng (8 tuần × 7 ngày × \~45’/ngày)
+## Roadmap 2 months (~45’/day)
 
 Mỗi ngày làm 2 việc ngắn: **(A) đọc nhanh docs chính thức**, **(B) code bài tập nhỏ** trong repo MEDQ.
 

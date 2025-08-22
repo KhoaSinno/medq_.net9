@@ -1,0 +1,60 @@
+## Ignore build results
+bin/
+obj/
+out/
+artifacts/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache/options
+.vs/
+*.dbmdl
+*.dbproj.schemaview
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Rider
+.idea/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Tye
+.tye/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# Coverage / test
+coverage/
+*.coverage
+*.coveragexml
+TestResult*/
+*.trx
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+*.nuget.props
+*.nuget.targets
+
+# Other
+*.swp
+*.DS_Store
+Thumbs.db
