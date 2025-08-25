@@ -9,7 +9,7 @@
 
 **Stack khuyến nghị (ổn định, ít chi phí):**
 
-* **.NET 8 (LTS) + ASP.NET Core Minimal API** cho backend (an toàn, docs rõ ràng). ([Microsoft Learn][1])
+* **.NET 9 (LTS) + ASP.NET Core Minimal API** cho backend (an toàn, docs rõ ràng). ([Microsoft Learn][1])
 * **EF Core + SQLite** (dev) ⇒ có thể đổi PostgreSQL/MySQL sau. ([Microsoft Learn][2])
 * **Identity/JWT**, **Data Protection**, **Rate Limiting**, **In-Memory Cache**. ([Microsoft Learn][3])
 * **OpenAPI** built-in .NET 9 templates *hoặc* Swashbuckle trên .NET 8 (đều OK). ([Microsoft Learn][4])
@@ -30,7 +30,7 @@ Mỗi ngày làm 2 việc ngắn: **(A) đọc nhanh docs chính thức**, **(B)
 * **D2:** A) DI trong .NET/ASP.NET Core. B) Tạo `IClock` + inject `ILogger<T>`. ([Microsoft Learn][5])
 * **D3:** A) Options pattern. B) `AppOptions` (paging size, cache TTL). ([Microsoft Learn][6])
 * **D4:** Thiết kế route chuẩn REST (resources/verbs/status codes). ([Microsoft Learn][7], [GitHub][8])
-* **D5:** A) OpenAPI. B) Bật Swagger UI hoặc built-in OpenAPI (tuỳ .NET 8/9). ([Microsoft Learn][9])
+* **D5:** A) OpenAPI. B) Bật Swagger UI hoặc built-in OpenAPI (.NET 9). ([Microsoft Learn][9])
 * **D6:** Viết endpoints v0: `GET /clinics`, `GET /pharmacies` (mock).
 * **D7 (Ôn + check-in):** Review kiến trúc API & log format.
 
