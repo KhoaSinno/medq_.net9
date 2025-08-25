@@ -1,7 +1,9 @@
 using System.Threading.RateLimiting;
+using Medq.Api.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
@@ -63,9 +65,18 @@ builder.Services.AddRateLimiter(options =>
 
     });
 });
+// SQLite
+builder.Services.AddDbContext<MedqDbContext>(opt =>
+    opt.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+// ProblemDetails 
+builder.Services.AddProblemDetails();
+
+
 var app = builder.Build();
 app.UseHttpsRedirection();
 app.UseRateLimiter();
+app.UseExceptionHandler();
+
 
 // Dev: Document API
 if (app.Environment.IsDevelopment())
@@ -154,9 +165,14 @@ api.MapPost("/clinics", (Clinic input) =>
 
 // --- Pharmacies ---
 // GET /api/v1/pharmacies  -> 200
-api.MapGet("/pharmacies", () =>
+api.MapGet("/pharmacies", (int? page, int? pageSize, IOptions<AppOptions> opt) =>
 {
-    return Results.Ok(pharmacies);
+    var cfg = opt.Value;
+    int size = pageSize ?? cfg.DefaultPageSize;
+    int p = Math.Max(page ?? 1, 1);
+    int skipItems = (p - 1) * size;
+    var items = pharmacies.Skip(skipItems).Take(size).ToList();
+    return Results.Ok(new { page = p, pageSize = size, total = pharmacies.Count, items });
 }).WithTags("Pharmacies")
    .WithName("ListPharmacies")
    .WithSummary("List all pharmacies")
