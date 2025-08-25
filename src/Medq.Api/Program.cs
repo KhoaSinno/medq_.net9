@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
+static ProblemDetails P(string title, int status) => new() { Title = title, Status = status };
+
 // Mock data
 
 List<Clinic> clinics = new List<Clinic>
@@ -30,7 +32,21 @@ var builder = WebApplication.CreateBuilder(args);
 
 // --- REGISTER SERVICES ---
 // Document API
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(opt =>
+{
+    opt.AddDocumentTransformer(
+        (doc, context, ct) =>
+        {
+            doc.Info = new()
+            {
+                Title = "Sinoo: MedQ API",
+                Version = "v1",
+                Description = "API for MedQ application"
+            };
+            return Task.CompletedTask;
+        }
+    );
+});
 // Clock services
 builder.Services.AddSingleton<IClock, SystemClock>();
 // Options
@@ -44,6 +60,7 @@ builder.Services.AddRateLimiter(options =>
         opt.Window = TimeSpan.FromMinutes(1);  // Trong 1 phút
         opt.QueueLimit = 0;                    // Không xếp hàng, quá thì chặn luôn
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+
     });
 });
 var app = builder.Build();
@@ -83,18 +100,37 @@ api.MapGet("/app-settings", (IOptions<AppOptions> opt) =>
 
 // --- Clinics ---
 // GET /api/v1/clinics  -> 200
-api.MapGet("/clinics", () =>
+api.MapGet("/clinics", (int? page, int? pageSize, IOptions<AppOptions> opt) =>
 {
-    return Results.Ok(clinics);
-});
+    var cfg = opt.Value;
+    int size = pageSize ?? cfg.DefaultPageSize;
+    int p = Math.Max(page ?? 1, 1);
+    if (size < 1 || size > 500)
+        return Results.BadRequest(P("PageSize must be between 1 and 500", 400));
+    int skipItems = (p - 1) * size;
+
+    var items = clinics.Skip(skipItems).Take(size).ToList();
+    return Results.Ok(new { page = p, pageSize = size, total = clinics.Count, items });
+}).WithName("ListClinics") // operationId trên UI
+.WithTags("Clinics")
+.WithSummary("List clinics with paging")
+.WithDescription("Returns paginated clinics. Defaults come from configuration (AppOptions.DefaultPageSize).")
+.Produces<IEnumerable<Clinic>>(StatusCodes.Status200OK)
+.ProducesProblem(StatusCodes.Status400BadRequest)
+.WithOpenApi();
+
 // GET /api/v1/clinics/{id}  -> 200 / 404
 api.MapGet("/clinics/{id:int}", (int id) =>
 {
     var c = clinics.FirstOrDefault(x => x.Id == id);
 
-    return c is null ? Results.NotFound(new ProblemDetails { Title = "Clinic not found", Status = StatusCodes.Status404NotFound }) : Results.Ok(c);
-}).WithTags("Get clinic by id")
-  .WithOpenApi();
+    return c is null ? Results.NotFound(P("Clinic not found", 404)) : Results.Ok(c);
+}).WithName("GetClinicById")
+.WithTags("Clinics")
+.WithSummary("Get clinic by id")
+.Produces<Clinic>(StatusCodes.Status200OK)
+.ProducesProblem(StatusCodes.Status404NotFound)
+.WithOpenApi();
 // POST /api/v1/clinics  -> 201 / 400 (demo 201)
 api.MapPost("/clinics", (Clinic input) =>
 {
@@ -107,7 +143,13 @@ api.MapPost("/clinics", (Clinic input) =>
 
     return Results.Created($"/api/v1/clinics/{created.Id}", created);
 })
+.WithName("CreateClinic")
+.WithTags("Clinics")
 .WithSummary("Create clinic")
+.WithDescription("Creates a clinic and returns 201 with Location header.")
+.Accepts<Clinic>("application/json")
+.Produces<Clinic>(StatusCodes.Status201Created)
+.ProducesProblem(StatusCodes.Status400BadRequest)
 .WithOpenApi();
 
 // --- Pharmacies ---
@@ -116,7 +158,10 @@ api.MapGet("/pharmacies", () =>
 {
     return Results.Ok(pharmacies);
 }).WithTags("Pharmacies")
-  .WithOpenApi();
+   .WithName("ListPharmacies")
+   .WithSummary("List all pharmacies")
+   .Produces<IEnumerable<Pharmacy>>(StatusCodes.Status200OK)
+   .WithOpenApi();
 
 // ----- Queues -----
 // GET /api/v1/queues?clinicId=...  -> 200 / 400 / 404
@@ -138,8 +183,14 @@ api.MapGet("/queues", (int? clinicId) =>
     }
     return Results.Ok(q);
 
-}).WithTags("List queue items of a clinic")
-  .WithOpenApi();
+}).WithName("ListQueuesByClinic")
+.WithTags("Queues")
+.WithSummary("List queue items by clinic")
+.WithDescription("400 if clinicId missing; 404 if clinic not found.")
+.Produces<IEnumerable<QueueItem>>(StatusCodes.Status200OK)
+.ProducesProblem(StatusCodes.Status400BadRequest)
+.ProducesProblem(StatusCodes.Status404NotFound)
+.WithOpenApi();
 
 
 // -- Main routes --
