@@ -1,5 +1,5 @@
 using System.Threading.RateLimiting;
-using Medq.Api.Data;
+using Medq.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
@@ -66,8 +66,12 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 // SQLite
+var provider = builder.Configuration["Database:Provider"] ?? "sqlite";
+var connSqlite = builder.Configuration.GetConnectionString("sqlite");
+
 builder.Services.AddDbContext<MedqDbContext>(opt =>
-    opt.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+    opt.UseSqlite(connSqlite, x => x.MigrationsAssembly("Medq.Infrastructure")));
+
 // ProblemDetails 
 builder.Services.AddProblemDetails();
 
