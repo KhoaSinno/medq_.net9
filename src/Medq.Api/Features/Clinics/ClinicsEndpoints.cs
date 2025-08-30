@@ -8,6 +8,7 @@ using Medq.Api.Options;
 using Medq.Domain.Entities;
 using Medq.Infrastructure.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -27,7 +28,7 @@ namespace Medq.Api.Features.Clinics
             })).WithOpenApi();
 
             // Search
-            group.MapGet("/search", async (PagingQuery q, IOptions<AppOptions> opt, MedqDbContext db, CancellationToken ct) =>
+            group.MapGet("/search", async ([AsParameters] PagingQuery q, IOptions<AppOptions> opt, MedqDbContext db, CancellationToken ct) =>
             {
                 var page = q.Page < 1 ? 1 : q.Page;
                 var pageSize = q.PageSize > 0 ? Math.Min(q.PageSize, opt.Value.MaxPageSize) : opt.Value.DefaultPageSize;
