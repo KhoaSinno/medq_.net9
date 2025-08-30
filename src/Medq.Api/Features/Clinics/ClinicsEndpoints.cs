@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Medq.Api.Contracts.Clinics;
+using Medq.Api.Contracts.Common;
+using Medq.Api.Options;
 using Medq.Domain.Entities;
 using Medq.Infrastructure.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Medq.Api.Features.Clinics
 {
@@ -22,6 +25,28 @@ namespace Medq.Api.Features.Clinics
                 var clinics = await db.Clinics.AsNoTracking().ToListAsync(ct);
                 return Results.Ok(clinics);
             })).WithOpenApi();
+
+            // Search
+            group.MapGet("/search", async (PagingQuery q, IOptions<AppOptions> opt, MedqDbContext db, CancellationToken ct) =>
+            {
+                var page = q.Page < 1 ? 1 : q.Page;
+                var pageSize = q.PageSize > 0 ? Math.Min(q.PageSize, opt.Value.MaxPageSize) : opt.Value.DefaultPageSize;
+
+                var query = db.Clinics.AsNoTracking();
+
+                query = q.Sort?.ToLowerInvariant() switch
+                {
+                    "name" => query.OrderBy(x => x.Name),
+                    "-name" => query.OrderByDescending(x => x.Name),
+                    "-id" => query.OrderByDescending(x => x.Id),
+                    _ => query.OrderBy(x => x.Id)
+                };
+
+                var total = await query.CountAsync(ct);
+                var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+
+                return Results.Ok(new { total, page, pageSize, items });
+            }).WithOpenApi();
 
             // Get by ID
             group.MapGet("/{id}", (async (MedqDbContext db, int id, CancellationToken ct) =>

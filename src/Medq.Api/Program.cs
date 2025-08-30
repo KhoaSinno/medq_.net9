@@ -246,5 +246,6 @@ sealed class ClockEndpoint { }
 public sealed class AppOptions
 {
     public int DefaultPageSize { get; set; } = 20;
+    public int MaxPageSize { get; set; } = 100;
     public int CacheTtlSeconds { get; set; } = 60;
 }
