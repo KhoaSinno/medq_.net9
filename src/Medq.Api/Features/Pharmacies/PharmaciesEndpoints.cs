@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Medq.Api.Contracts.Pharmacies;
+using Medq.Domain.Entities;
 using Medq.Infrastructure.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Medq.Api.Features.Pharmacies
@@ -19,7 +22,7 @@ namespace Medq.Api.Features.Pharmacies
             {
                 var pharmacies = await db.Pharmacies.AsNoTracking().ToListAsync(ct);
                 return Results.Ok(pharmacies);
-            }).WithOpenApi();
+            }).WithName("ListPharmacies").WithTags("Pharmacies").WithSummary("List all pharmacies").WithDescription("Returns a list of all pharmacies.").Produces<IEnumerable<Pharmacy>>(StatusCodes.Status200OK).ProducesProblem(StatusCodes.Status404NotFound).WithOpenApi();
 
             // filter ?openNow=false | true
             group.MapGet("/filter", async (MedqDbContext db, bool? openNow, CancellationToken ct) =>
@@ -30,14 +33,14 @@ namespace Medq.Api.Features.Pharmacies
                     p = p.Where(x => x.OpenNow == openNow.Value);
 
                 return await p.ToListAsync(ct);
-            }).WithOpenApi();
+            }).WithName("FilterPharmacies").WithTags("Pharmacies").WithSummary("Filter pharmacies").WithDescription("Filters pharmacies by open status.").Produces<IEnumerable<Pharmacy>>(StatusCodes.Status200OK).ProducesProblem(StatusCodes.Status404NotFound).WithOpenApi();
 
             // get by id
             group.MapGet("/{id:int}", async (MedqDbContext db, int id, CancellationToken ct) =>
             {
                 var pharmacy = await db.Pharmacies.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
                 return pharmacy is not null ? Results.Ok(pharmacy) : Results.NotFound();
-            }).WithOpenApi();
+            }).WithName("GetPharmacyById").WithTags("Pharmacies").WithSummary("Get pharmacy by id").Produces<Pharmacy>(StatusCodes.Status200OK).ProducesProblem(StatusCodes.Status404NotFound).WithOpenApi();
 
             // Create
             group.MapPost("/", async (MedqDbContext db, PharmacyCreateDto dto, CancellationToken ct) =>
@@ -59,7 +62,7 @@ namespace Medq.Api.Features.Pharmacies
                 db.Pharmacies.Add(entity);
                 await db.SaveChangesAsync(ct);
                 return Results.Created($"/api/v1/pharmacies/{entity.Id}", entity);
-            }).WithOpenApi();
+            }).WithName("CreatePharmacy").WithTags("Pharmacies").WithSummary("Create pharmacy").WithDescription("Creates a pharmacy and returns 201 with Location header.").Accepts<PharmacyCreateDto>("application/json").Produces<Domain.Entities.Pharmacy>(StatusCodes.Status201Created).ProducesProblem(StatusCodes.Status400BadRequest).WithOpenApi();
 
             // Update
             group.MapPut("/{id:int}", async (MedqDbContext db, int id, PharmacyUpdateDto dto, CancellationToken ct) =>
@@ -73,7 +76,7 @@ namespace Medq.Api.Features.Pharmacies
 
                 await db.SaveChangesAsync(ct);
                 return Results.Ok(pharmacy);
-            }).WithOpenApi();
+            }).WithName("UpdatePharmacy").WithTags("Pharmacies").WithSummary("Update pharmacy").WithDescription("Updates a pharmacy and returns 200 OK.").Accepts<PharmacyUpdateDto>("application/json").Produces<Domain.Entities.Pharmacy>(StatusCodes.Status200OK).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status400BadRequest).WithOpenApi();
 
             // Delete
             group.MapDelete("/{id:int}", async (MedqDbContext db, int id, CancellationToken ct) =>
@@ -84,9 +87,9 @@ namespace Medq.Api.Features.Pharmacies
                 db.Pharmacies.Remove(pharmacy);
                 await db.SaveChangesAsync(ct);
                 return Results.NoContent();
-            }).WithOpenApi();
+            }).WithName("DeletePharmacy").WithTags("Pharmacies").WithSummary("Delete pharmacy").WithDescription("Deletes a pharmacy and returns 204 No Content.").ProducesProblem(StatusCodes.Status404NotFound).WithOpenApi();
 
-            
+
             return app;
         }
     }
