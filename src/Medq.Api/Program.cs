@@ -74,6 +74,7 @@ if (app.Environment.IsDevelopment())
 // // --- GROUP API --- 
 var api = app.MapGroup("/api/v1").WithTags("v1").WithOpenApi().RequireRateLimiting("fixed");
 
+// Register DI manual
 api.MapGet("/now", (IClock clock, ILogger<ClockEndpoint> logger) =>
 {
     // Use the injected IClock service
@@ -97,10 +98,7 @@ api.MapGet("/app-settings", (IOptions<AppOptions> opt) =>
 
 // -- Main routes --
 app.MapGet("/", () => Results.Redirect("/scalar"))
-    .ExcludeFromDescription(); // Exclude from OpenAPI documentation
-app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-
-
+    .ExcludeFromDescription();
 
 app.Run();
 

@@ -18,7 +18,7 @@ namespace Medq.Api.Features.Clinics
     {
         public static IEndpointRouteBuilder MapClinicsEndpoint(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/api/clinics").WithTags("Clinics");
+            var group = app.MapGroup("/api/v1/clinics").WithTags("Clinics");
 
             // Get all (simple)
             group.MapGet("/", (async (MedqDbContext db, CancellationToken ct) =>
